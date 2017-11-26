@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="music_player_album_art">315dp</dimen>
+    <dimen name="music_player_progress">24dp</dimen>
+    <dimen name="music_player_play_field">125dp</dimen>
+</resources>
