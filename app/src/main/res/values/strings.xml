@@ -98,4 +98,7 @@
     </string>
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="radio">Radio</string>
+    <string name="shuffle">Shuffle</string>
+    <string name="textview">TextView</string>
 </resources>
