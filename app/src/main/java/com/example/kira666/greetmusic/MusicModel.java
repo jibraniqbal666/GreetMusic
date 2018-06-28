@@ -12,9 +12,10 @@ public class MusicModel {
     private String path;
     private String albumId;
     private String artistId;
+    private String albumArt;
 
 
-    public MusicModel(long id, String title, String artist, String album, String path, String albumId, String artistId) {
+    public MusicModel(long id, String title, String artist, String album, String path, String albumId, String artistId, String albumArt) {
         this.id = id;
         this.title = title;
         this.artist = artist;
@@ -22,6 +23,7 @@ public class MusicModel {
         this.path = path;
         this.albumId = albumId;
         this.artistId = artistId;
+        this.albumArt = albumArt;
     }
 
     public long getId() {
@@ -40,7 +42,9 @@ public class MusicModel {
         return album;
     }
 
-    public String getPath() { return path; }
+    public String getPath() {
+        return path;
+    }
 
     public String getAlbumId() {
         return albumId;
@@ -48,5 +52,9 @@ public class MusicModel {
 
     public String getArtistId() {
         return artistId;
+    }
+
+    public String getAlbumArt() {
+        return albumArt;
     }
 }

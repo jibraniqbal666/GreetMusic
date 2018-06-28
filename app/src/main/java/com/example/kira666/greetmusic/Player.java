@@ -11,20 +11,20 @@ import java.io.IOException;
  */
 
 public class Player {
-    MediaPlayer mediaPlayer;
     public static String path = "/nopath/";
     private static Player myObj;
+    MediaPlayer mediaPlayer;
+
+    private Player() {
+        mediaPlayer = new MediaPlayer();
+        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+    }
 
     public static Player getInstance() {
         if (myObj == null) {
             myObj = new Player();
         }
         return myObj;
-    }
-
-    private Player() {
-        mediaPlayer = new MediaPlayer();
-        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
     }
 
     public boolean play(String path, boolean buttonClicked) {
@@ -57,18 +57,21 @@ public class Player {
                 mediaPlayer.pause();
                 return false;
             } else {
-               return true;
+                return true;
             }
         }
     }
-    public void seekMusic(int progress){
+
+    public void seekMusic(int progress) {
         //int mediaDuration = mediaPlayer.getDuration();
         mediaPlayer.seekTo(progress);
     }
-    public int getDuration(){
+
+    public int getDuration() {
         return mediaPlayer.getDuration();
     }
-    public int getCurrentPosition(){
+
+    public int getCurrentPosition() {
         return mediaPlayer.getCurrentPosition();
     }
 

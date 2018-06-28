@@ -1,16 +1,19 @@
 package com.example.kira666.greetmusic;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.os.Handler;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.os.Handler;
+import android.support.design.widget.FloatingActionButton;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
+
+import com.bumptech.glide.Glide;
+
+import java.io.File;
 
 public class PlayMusic extends AppCompatActivity {
     //declaration of music
@@ -23,6 +26,8 @@ public class PlayMusic extends AppCompatActivity {
     TextView artistText;
     TextView titleBottomText;
     TextView durationBottomText;
+
+    FloatingActionButton share;
 
     Player player;
 
@@ -63,25 +68,23 @@ public class PlayMusic extends AppCompatActivity {
 
 
         //onclick
-        if(title!=null)
+        if (title != null)
             titleText.setText(title);
 
-        if(artist!=null)
+        if (artist != null)
             artistText.setText(artist);
 
-        if(title!=null&&artist!=null)
-            titleBottomText.setText(title+" ( "+artist+" ) ");
+        if (title != null && artist != null)
+            titleBottomText.setText(title + " ( " + artist + " ) ");
 
         MusicLibrary musicLibrary = new MusicLibrary(getApplicationContext());
 
-        Bitmap albumArtImage = BitmapFactory.decodeFile(musicLibrary.getAlbumArtPath(albumId));
+        Glide.with(this)
+                .load(musicLibrary.getAlbumArtPath(albumId))
+                .into(albumArt);
 
 
-        if(albumArtImage!=null) {
-            albumArt.setImageBitmap(albumArtImage);
-        }
-
-        if(player.play(path,false))
+        if (player.play(path, false))
             playPauseButton.setImageResource(R.drawable.ic_pause_circle_filled_white_36dp);
         else
             playPauseButton.setImageResource(R.drawable.ic_play_circle_filled_white_36dp);
@@ -90,7 +93,7 @@ public class PlayMusic extends AppCompatActivity {
         playPauseButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(player.play(path,true))
+                if (player.play(path, true))
                     playPauseButton.setImageResource(R.drawable.ic_pause_circle_filled_white_36dp);
                 else
                     playPauseButton.setImageResource(R.drawable.ic_play_circle_filled_white_36dp);
@@ -104,31 +107,38 @@ public class PlayMusic extends AppCompatActivity {
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
-                Log.d("MusicPlay:OnstartTrac",String.valueOf(seekBar.getProgress()));
-                player.seekMusic(seekBar.getProgress()*1000);
+                Log.d("MusicPlay:OnstartTrac", String.valueOf(seekBar.getProgress()));
+                player.seekMusic(seekBar.getProgress() * 1000);
             }
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                Log.d("MusicPlay:OnstartTrac",String.valueOf(seekBar.getProgress()));
-                player.seekMusic(seekBar.getProgress()*1000);
+                Log.d("MusicPlay:OnstartTrac", String.valueOf(seekBar.getProgress()));
+                player.seekMusic(seekBar.getProgress() * 1000);
             }
         });
         final Handler mHandler = new Handler();
-//Make sure you update Seekbar on UI thread
+        //Make sure you update Seekbar on UI thread
         PlayMusic.this.runOnUiThread(new Runnable() {
 
             @Override
             public void run() {
-                if(player != null){
+                if (player != null) {
                     int mCurrentPosition = player.getCurrentPosition();
-                    seekMusic.setProgress((int)((float)mCurrentPosition/player.getDuration()*100));
-                    String remainingMin = String.valueOf(((player.getDuration()-player.getCurrentPosition())/(1000*60))%60);
-                    String remainingSec = String.valueOf(((player.getDuration()-player.getCurrentPosition())/(1000))%60);
-                    durationBottomText.setText(remainingMin+":"+remainingSec);
+                    seekMusic.setProgress((int) ((float) mCurrentPosition / player.getDuration() * 100));
+                    String remainingMin = String.valueOf(((player.getDuration() - player.getCurrentPosition()) / (1000 * 60)) % 60);
+                    String remainingSec = String.valueOf(((player.getDuration() - player.getCurrentPosition()) / (1000)) % 60);
+                    durationBottomText.setText(remainingMin + ":" + remainingSec);
 
                 }
                 mHandler.postDelayed(this, 1000);
+            }
+        });
+
+        share.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                File file = new File(path);
             }
         });
     }

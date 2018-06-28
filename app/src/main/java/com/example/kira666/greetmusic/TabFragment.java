@@ -3,16 +3,16 @@ package com.example.kira666.greetmusic;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
 
 import java.util.ArrayList;
 
@@ -21,11 +21,6 @@ import java.util.ArrayList;
  */
 
 public class TabFragment extends Fragment {
-    private ListView listView;
-    private boolean storagePermissionStatus = false;
-    private boolean wakelockPermissionStatus = false;
-    public final int REQUEST_EXTERNAL_STORAGE = 1;
-    public final int REQUEST_WAKE_LOCK = 2;
     public final static String EXTRAS_MUSIC_PATH = "getMusicPath";
     public final static String EXTRAS_MUSIC_ID = "getMusicId";
     public final static String EXTRAS_MUSIC_TITLE = "getMusicTitle";
@@ -34,14 +29,24 @@ public class TabFragment extends Fragment {
     public final static String EXTRAS_MUSIC_ARTIST_ID = "getMusicArtistId";
     public final static String EXTRAS_MUSIC_ALBUM_ID = "getMusicAlbumId";
 
+    public final int REQUEST_EXTERNAL_STORAGE = 1;
+    public final int REQUEST_WAKE_LOCK = 2;
+    private RecyclerView listView;
+    private ArrayList<MusicModel> music;
+    private ArrayList<String> albums;
+    private ArrayList<String> artists;
+
+    private MusicLibrary musicLibrary;
+    private boolean storagePermissionStatus = false;
+    private boolean wakelockPermissionStatus = false;
+
     public TabFragment() {
         // Required empty public constructor
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) { super.onCreate(savedInstanceState);
-
-
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
     }
 
     @Override
@@ -78,46 +83,37 @@ public class TabFragment extends Fragment {
                 // app-defined int constant. The callback method gets the
                 // result of the request.
             }
-        }
-        else {
+        } else {
             storagePermissionStatus = true;
             wakelockPermissionStatus = true;
         }
 
-        View rootView = inflater.inflate(R.layout.fragment_one,container,false);
+        View rootView = inflater.inflate(R.layout.fragment_one, container, false);
 
-        listView = (ListView) rootView.findViewById(R.id.listView);
+        listView = rootView.findViewById(R.id.recycler);
+        listView.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
 
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                MusicModel musicModel = (MusicModel) parent.getItemAtPosition(position);
-                Intent intent = new Intent(getContext().getApplicationContext(),PlayMusic.class);
 
-                intent.putExtra(EXTRAS_MUSIC_ID,musicModel.getId());
-                intent.putExtra(EXTRAS_MUSIC_PATH,musicModel.getPath());
-                intent.putExtra(EXTRAS_MUSIC_TITLE,musicModel.getTitle());
-                intent.putExtra(EXTRAS_MUSIC_ALBUM,musicModel.getAlbum());
-                intent.putExtra(EXTRAS_MUSIC_ARTIST,musicModel.getArtist());
-                intent.putExtra(EXTRAS_MUSIC_ALBUM_ID,musicModel.getAlbumId());
-                intent.putExtra(EXTRAS_MUSIC_ARTIST_ID,musicModel.getArtistId());
-
-                startActivity(intent);
-            }
-        });
-
-        if(storagePermissionStatus){
+        if (storagePermissionStatus) {
             String getArgs;
-            if((getArgs = getArguments().getString(MainActivity.ARGS_KEY))!=null) {
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+
+                }
+            });
+            musicLibrary = new MusicLibrary(getContext());
+
+            if ((getArgs = getArguments().getString(MainActivity.ARGS_KEY)) != null) {
                 switch (getArgs) {
                     case "Songs":
-                        listView.setAdapter(new CustomAdapterSongs(getActivity().getApplicationContext(),new MusicLibrary(getActivity().getApplicationContext()).getMusicLib()));
+                        new GetMusic().execute();
                         return rootView;
                     case "Albums":
-                        listView.setAdapter(new ArrayAdapter<String>(getActivity().getApplicationContext(),android.R.layout.simple_list_item_1,new MusicLibrary(getActivity().getApplicationContext()).getAlbum()));
+                        new GetAlbum().execute();
                         return rootView;
                     case "Artists":
-                        listView.setAdapter(new ArrayAdapter<String>(getActivity().getApplicationContext(),android.R.layout.simple_list_item_1,new MusicLibrary(getActivity().getApplicationContext()).getArtist()));
+                        new GetArtist().execute();
                         return rootView;
                     case "Playlists":
                         break;
@@ -128,6 +124,7 @@ public class TabFragment extends Fragment {
         }
         return inflater.inflate(R.layout.fragment_one, container, false);
     }
+
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            String permissions[], int[] grantResults) {
@@ -147,7 +144,7 @@ public class TabFragment extends Fragment {
 
                 }
             }
-                break;
+            break;
             case REQUEST_WAKE_LOCK: {
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -163,11 +160,82 @@ public class TabFragment extends Fragment {
                 }
             }
             break;
-            }
-
-
-            // other 'case' lines to check for other
-            // permissions this app might request
         }
+
+
+        // other 'case' lines to check for other
+        // permissions this app might request
+    }
+
+    class GetMusic extends AsyncTask<Void, Void, ArrayList<MusicModel>> {
+        @Override
+        protected ArrayList<MusicModel> doInBackground(Void... voids) {
+            if (music != null) {
+                return null;
+            }
+            return musicLibrary.getMusicLib();
+        }
+
+        @Override
+        protected void onPostExecute(final ArrayList<MusicModel> musicModels) {
+            if (music == null) {
+                music = musicModels;
+            }
+            listView.setAdapter(new CustomAdapterSongs(getActivity().getApplicationContext(), music, new CustomAdapterSongs.OnItemClickListener() {
+                @Override
+                public void onItemClick(View v, int position) {
+
+                    MusicModel musicModel = music.get(position);
+
+                    Intent intent = new Intent(getContext(), PlayMusic.class);
+                    intent.putExtra(EXTRAS_MUSIC_ID, musicModel.getId());
+                    intent.putExtra(EXTRAS_MUSIC_PATH, musicModel.getPath());
+                    intent.putExtra(EXTRAS_MUSIC_TITLE, musicModel.getTitle());
+                    intent.putExtra(EXTRAS_MUSIC_ALBUM, musicModel.getAlbum());
+                    intent.putExtra(EXTRAS_MUSIC_ARTIST, musicModel.getArtist());
+                    intent.putExtra(EXTRAS_MUSIC_ALBUM_ID, musicModel.getAlbumId());
+                    intent.putExtra(EXTRAS_MUSIC_ARTIST_ID, musicModel.getArtistId());
+
+                    startActivity(intent);
+                }
+            }));
+        }
+    }
+
+    class GetAlbum extends AsyncTask<Void, Void, ArrayList<String>> {
+        @Override
+        protected ArrayList<String> doInBackground(Void... voids) {
+            if (albums != null) {
+                return null;
+            }
+            return musicLibrary.getAlbum();
+        }
+
+        @Override
+        protected void onPostExecute(ArrayList<String> strings) {
+            if (albums == null) {
+                albums = strings;
+            }
+            listView.setAdapter(new CustomAdapter(getContext(), albums));
+        }
+    }
+
+    class GetArtist extends AsyncTask<Void, Void, ArrayList<String>> {
+        @Override
+        protected ArrayList<String> doInBackground(Void... voids) {
+            if (artists != null) {
+                return null;
+            }
+            return musicLibrary.getArtist();
+        }
+
+        @Override
+        protected void onPostExecute(ArrayList<String> strings) {
+            if (artists == null) {
+                artists = strings;
+            }
+            listView.setAdapter(new CustomAdapter(getContext(), artists));
+        }
+    }
 
 }
