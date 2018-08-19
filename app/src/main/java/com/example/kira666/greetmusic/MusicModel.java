@@ -1,5 +1,7 @@
 package com.example.kira666.greetmusic;
 
+import android.net.Uri;
+
 /**
  * Created by Kira666 on 7/14/2017.
  */
@@ -12,10 +14,10 @@ public class MusicModel {
     private String path;
     private String albumId;
     private String artistId;
-    private String albumArt;
+    private Uri albumArt;
 
 
-    public MusicModel(long id, String title, String artist, String album, String path, String albumId, String artistId, String albumArt) {
+    public MusicModel(long id, String title, String artist, String album, String path, String albumId, String artistId, Uri albumArt) {
         this.id = id;
         this.title = title;
         this.artist = artist;
@@ -54,7 +56,7 @@ public class MusicModel {
         return artistId;
     }
 
-    public String getAlbumArt() {
+    public Uri getAlbumArt() {
         return albumArt;
     }
 }

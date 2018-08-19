@@ -1,6 +1,7 @@
 package com.example.kira666.greetmusic;
 
 import android.content.Context;
+import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,19 +10,20 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 
-import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Kira666 on 7/16/2017.
  */
 
 public class CustomAdapterSongs extends RecyclerView.Adapter<CustomAdapterSongs.ViewHolder> {
-    private ArrayList<MusicModel> listData;
+    private List<MusicModel> listData;
     public OnItemClickListener listener;
     private Context context;
 
-    public CustomAdapterSongs(Context context, ArrayList<MusicModel> listData, OnItemClickListener onItemClickListener) {
+    public CustomAdapterSongs(Context context, List<MusicModel> listData, OnItemClickListener onItemClickListener) {
         this.listData = listData;
         this.context = context;
         listener = onItemClickListener;
@@ -59,11 +61,15 @@ public class CustomAdapterSongs extends RecyclerView.Adapter<CustomAdapterSongs.
         holder.artist.setText(listData.get(position).getArtist());
 
 
-        String albumArt = listData.get(position).getAlbumArt();
+        Uri albumArt = listData.get(position).getAlbumArt();
 
         if (albumArt != null) {
             Glide.with(context)
                     .load(albumArt)
+                    .apply(new RequestOptions()
+                            .placeholder(R.drawable.no_album_1)
+                            .error(R.drawable.no_album_1)
+                    )
                     .into(holder.albumArt);
         }
 

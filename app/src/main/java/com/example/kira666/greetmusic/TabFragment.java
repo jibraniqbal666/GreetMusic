@@ -14,7 +14,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Kira666 on 7/13/2017.
@@ -28,13 +28,14 @@ public class TabFragment extends Fragment {
     public final static String EXTRAS_MUSIC_ALBUM = "getMusicAlbum";
     public final static String EXTRAS_MUSIC_ARTIST_ID = "getMusicArtistId";
     public final static String EXTRAS_MUSIC_ALBUM_ID = "getMusicAlbumId";
+    public final static String EXTRAS_MUSIC_ALBUM_ART = "getMusicAlbumArt";
 
     public final int REQUEST_EXTERNAL_STORAGE = 1;
     public final int REQUEST_WAKE_LOCK = 2;
     private RecyclerView listView;
-    private ArrayList<MusicModel> music;
-    private ArrayList<String> albums;
-    private ArrayList<String> artists;
+    private List<MusicModel> music;
+    private List<String> albums;
+    private List<String> artists;
 
     private MusicLibrary musicLibrary;
     private boolean storagePermissionStatus = false;
@@ -102,7 +103,8 @@ public class TabFragment extends Fragment {
 
                 }
             });
-            musicLibrary = new MusicLibrary(getContext());
+
+            musicLibrary = MusicLibrary.getInstance(getContext().getApplicationContext());
 
             if ((getArgs = getArguments().getString(MainActivity.ARGS_KEY)) != null) {
                 switch (getArgs) {
@@ -167,9 +169,9 @@ public class TabFragment extends Fragment {
         // permissions this app might request
     }
 
-    class GetMusic extends AsyncTask<Void, Void, ArrayList<MusicModel>> {
+    class GetMusic extends AsyncTask<Void, Void, List<MusicModel>> {
         @Override
-        protected ArrayList<MusicModel> doInBackground(Void... voids) {
+        protected List<MusicModel> doInBackground(Void... voids) {
             if (music != null) {
                 return null;
             }
@@ -177,7 +179,7 @@ public class TabFragment extends Fragment {
         }
 
         @Override
-        protected void onPostExecute(final ArrayList<MusicModel> musicModels) {
+        protected void onPostExecute(final List<MusicModel> musicModels) {
             if (music == null) {
                 music = musicModels;
             }
@@ -195,6 +197,8 @@ public class TabFragment extends Fragment {
                     intent.putExtra(EXTRAS_MUSIC_ARTIST, musicModel.getArtist());
                     intent.putExtra(EXTRAS_MUSIC_ALBUM_ID, musicModel.getAlbumId());
                     intent.putExtra(EXTRAS_MUSIC_ARTIST_ID, musicModel.getArtistId());
+                    intent.putExtra(EXTRAS_MUSIC_ALBUM_ART, musicModel.getAlbumArt());
+
 
                     startActivity(intent);
                 }
@@ -202,9 +206,9 @@ public class TabFragment extends Fragment {
         }
     }
 
-    class GetAlbum extends AsyncTask<Void, Void, ArrayList<String>> {
+    class GetAlbum extends AsyncTask<Void, Void, List<String>> {
         @Override
-        protected ArrayList<String> doInBackground(Void... voids) {
+        protected List<String> doInBackground(Void... voids) {
             if (albums != null) {
                 return null;
             }
@@ -212,7 +216,7 @@ public class TabFragment extends Fragment {
         }
 
         @Override
-        protected void onPostExecute(ArrayList<String> strings) {
+        protected void onPostExecute(List<String> strings) {
             if (albums == null) {
                 albums = strings;
             }
@@ -220,9 +224,9 @@ public class TabFragment extends Fragment {
         }
     }
 
-    class GetArtist extends AsyncTask<Void, Void, ArrayList<String>> {
+    class GetArtist extends AsyncTask<Void, Void, List<String>> {
         @Override
-        protected ArrayList<String> doInBackground(Void... voids) {
+        protected List<String> doInBackground(Void... voids) {
             if (artists != null) {
                 return null;
             }
@@ -230,7 +234,7 @@ public class TabFragment extends Fragment {
         }
 
         @Override
-        protected void onPostExecute(ArrayList<String> strings) {
+        protected void onPostExecute(List<String> strings) {
             if (artists == null) {
                 artists = strings;
             }

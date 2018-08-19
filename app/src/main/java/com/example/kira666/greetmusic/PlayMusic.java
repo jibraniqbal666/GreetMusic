@@ -1,6 +1,8 @@
 package com.example.kira666.greetmusic;
 
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -12,6 +14,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 
 import java.io.File;
 
@@ -44,23 +47,28 @@ public class PlayMusic extends AppCompatActivity {
         final String title = getIntent().getExtras().getString(TabFragment.EXTRAS_MUSIC_TITLE);
         final String artist = getIntent().getExtras().getString(TabFragment.EXTRAS_MUSIC_ARTIST);
         final String albumId = getIntent().getExtras().getString(TabFragment.EXTRAS_MUSIC_ALBUM_ID);
+        final Uri albumArtStr = (Uri) getIntent().getExtras().get(TabFragment.EXTRAS_MUSIC_ALBUM_ART);
+
 
         //player
         player = Player.getInstance();
 
         //Music initialization
-        titleText = (TextView) findViewById(R.id.playerTitleText);
-        artistText = (TextView) findViewById(R.id.playerArtistText);
-        titleBottomText = (TextView) findViewById(R.id.playerTitleBottom);
-        durationBottomText = (TextView) findViewById(R.id.playerDuration);
+        titleText = findViewById(R.id.playerTitleText);
+        artistText = findViewById(R.id.playerArtistText);
+        titleBottomText = findViewById(R.id.playerTitleBottom);
+        durationBottomText = findViewById(R.id.playerDuration);
 
-        albumArt = (ImageView) findViewById(R.id.playerAlbumArt);
+        albumArt = findViewById(R.id.playerAlbumArt);
 
-        playPauseButton = (ImageButton) findViewById(R.id.playerPlayButton);
-        nextButton = (ImageButton) findViewById(R.id.playerNextButton);
-        previousButton = (ImageButton) findViewById(R.id.playerNextButton);
+        playPauseButton = findViewById(R.id.playerPlayButton);
+        nextButton = findViewById(R.id.playerNextButton);
+        previousButton = findViewById(R.id.playerNextButton);
 
-        seekMusic = (SeekBar) findViewById(R.id.playerSeekBar);
+        share = findViewById(R.id.floatingActionButton);
+
+
+        seekMusic = findViewById(R.id.playerSeekBar);
         seekMusic.setThumbOffset(0);
         // set style, just once
         seekMusic.setProgress(0);
@@ -77,10 +85,13 @@ public class PlayMusic extends AppCompatActivity {
         if (title != null && artist != null)
             titleBottomText.setText(title + " ( " + artist + " ) ");
 
-        MusicLibrary musicLibrary = new MusicLibrary(getApplicationContext());
 
         Glide.with(this)
-                .load(musicLibrary.getAlbumArtPath(albumId))
+                .load(MusicLibrary.getAlbumArtPath(Long.parseLong(albumId)))
+                .apply(new RequestOptions()
+                        .placeholder(R.drawable.no_album_1)
+                        .error(R.drawable.no_album_1)
+                )
                 .into(albumArt);
 
 
@@ -138,7 +149,10 @@ public class PlayMusic extends AppCompatActivity {
         share.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                File file = new File(path);
+                File input = new File(path);
+                File output = new File(getBaseContext().getExternalFilesDir(Environment.DIRECTORY_MUSIC), Uri.fromFile(new File(path)).getLastPathSegment().split(".")[0] + "_cut.mp3");
+                new CutAudio().cutAudio(input, output);
+                Log.i(this.getClass().getName(), output.getAbsolutePath());
             }
         });
     }

@@ -1,12 +1,14 @@
 package com.example.kira666.greetmusic;
 
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
 
 import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -17,119 +19,140 @@ public class MusicLibrary {
     ContentResolver musicResolver;
     Context context;
     private Uri musicUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+    private static MusicLibrary instance;
+    List<MusicModel> musicModels;
+    List<String> songs;
+    List<String> artists;
+    List<String> albums;
 
-    public MusicLibrary(Context context) {
+    private MusicLibrary(Context context) {
         this.context = context;
         musicResolver = context.getContentResolver();
     }
 
-    public ArrayList<MusicModel> getMusicLib() {
+    public static MusicLibrary getInstance(Context context) {
+        if (instance == null) {
+            return new MusicLibrary(context);
+        }
+        return instance;
+    }
+
+    public static Uri getAlbumArtPath(long albumId) {
+        return ContentUris.withAppendedId(Uri.parse("content://media/external/audio/albumart"), albumId);
+    }
+
+    public List<MusicModel> getMusicLib() {
         String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
         Cursor musicCursor = musicResolver.query(musicUri, null, null, null, sortOrder);
-        ArrayList<MusicModel> musicModels = new ArrayList<>();
-        if (musicCursor != null && musicCursor.moveToFirst()) {
-            //get columns
-            int titleColumn = musicCursor.getColumnIndex
-                    (MediaStore.Audio.Media.TITLE);
-            int idColumn = musicCursor.getColumnIndex
-                    (MediaStore.Audio.Media._ID);
-            int artistColumn = musicCursor.getColumnIndex
-                    (MediaStore.Audio.Media.ARTIST);
-            int albumColumn = musicCursor.getColumnIndex
-                    (MediaStore.Audio.Media.ALBUM);
-            int idartistColumn = musicCursor.getColumnIndex
-                    (MediaStore.Audio.Media.ARTIST_ID);
-            int idalbumColumn = musicCursor.getColumnIndex
-                    (MediaStore.Audio.Media.ALBUM_ID);
-
-            int pathColumn = musicCursor.getColumnIndex
-                    (MediaStore.Audio.Media.DATA);
-
-            //add songs to list
-            do {
-                long id = musicCursor.getLong(idColumn);
-                String title = musicCursor.getString(titleColumn);
-                String artist = musicCursor.getString(artistColumn);
-                String album = musicCursor.getString(albumColumn);
-                String path = musicCursor.getString(pathColumn);
-                String idartist = musicCursor.getString(idartistColumn);
-                String idalbum = musicCursor.getString(idalbumColumn);
-                String albumart = getAlbumArtPath(idalbum);
-
-
-                musicModels.add(new MusicModel(id, title, artist, album, path, idalbum, idartist, albumart));
+        if (musicCursor != null) {
+            if (musicModels == null) {
+                musicModels = new ArrayList<>();
             }
-            while (musicCursor.moveToNext());
+            if (musicCursor.getCount() > musicModels.size()) {
+                if (musicCursor.moveToFirst()) {
+                    //get columns
+                    int titleColumn = musicCursor.getColumnIndex
+                            (MediaStore.Audio.Media.TITLE);
+                    int idColumn = musicCursor.getColumnIndex
+                            (MediaStore.Audio.Media._ID);
+                    int artistColumn = musicCursor.getColumnIndex
+                            (MediaStore.Audio.Media.ARTIST);
+                    int albumColumn = musicCursor.getColumnIndex
+                            (MediaStore.Audio.Media.ALBUM);
+                    int idartistColumn = musicCursor.getColumnIndex
+                            (MediaStore.Audio.Media.ARTIST_ID);
+                    int idalbumColumn = musicCursor.getColumnIndex
+                            (MediaStore.Audio.Media.ALBUM_ID);
+
+                    int pathColumn = musicCursor.getColumnIndex
+                            (MediaStore.Audio.Media.DATA);
+
+                    //add songs to list
+                    do {
+                        long id = musicCursor.getLong(idColumn);
+                        String title = musicCursor.getString(titleColumn);
+                        String artist = musicCursor.getString(artistColumn);
+                        String album = musicCursor.getString(albumColumn);
+                        String path = musicCursor.getString(pathColumn);
+                        long idartist = musicCursor.getLong(idartistColumn);
+                        long idalbum = musicCursor.getLong(idalbumColumn);
+                        Uri albumart = getAlbumArtPath(idalbum);
+
+
+                        musicModels.add(new MusicModel(id, title, artist, album, path, String.valueOf(idalbum), String.valueOf(idartist), albumart));
+                    }
+                    while (musicCursor.moveToNext());
+                }
+            }
+            musicCursor.close();
         }
         return musicModels;
     }
 
-    public ArrayList<String> getSongs() {
-        ArrayList<MusicModel> musicModels = getMusicLib();
+    public void getSongs() {
         if (musicModels.size() > 0) {
-            ArrayList<String> songsArray = new ArrayList<>();
+            songs = new ArrayList<>();
             for (MusicModel musicModel : musicModels) {
-                songsArray.add(musicModel.getTitle());
+                songs.add(musicModel.getTitle());
             }
-            return songsArray;
         }
-        return null;
     }
 
-    public ArrayList<String> getArtist() {
+    public List<String> getArtist() {
         String[] mProjection =
                 {
                         MediaStore.Audio.Media.ARTIST
                 };
         String sortOrder = MediaStore.Audio.Media.ARTIST + " ASC";
         Cursor musicCursor = musicResolver.query(musicUri, mProjection, null, null, sortOrder);
-        ArrayList<String> artistArray = new ArrayList<>();
-        if (musicCursor != null && musicCursor.moveToFirst()) {
-            //get columns
-            int artistColumn = musicCursor.getColumnIndex
-                    (MediaStore.Audio.Media.ARTIST);
-            //add songs to list
-            do {
-                String artist = musicCursor.getString(artistColumn);
-                artistArray.add(artist);
+        if (musicCursor != null) {
+            if (artists == null) {
+                artists = new ArrayList<>();
             }
-            while (musicCursor.moveToNext());
+            if (musicCursor.getCount() > artists.size()) {
+                if (musicCursor.moveToFirst()) {
+                    //get columns
+                    int artistColumn = musicCursor.getColumnIndex
+                            (MediaStore.Audio.Media.ARTIST);
+                    //add songs to list
+                    do {
+                        String artist = musicCursor.getString(artistColumn);
+                        artists.add(artist);
+                    }
+                    while (musicCursor.moveToNext());
+                }
+            }
+            musicCursor.close();
         }
-        return artistArray;
+        return artists;
     }
 
-    public ArrayList<String> getAlbum() {
+    public List<String> getAlbum() {
         String[] mProjection =
                 {
                         MediaStore.Audio.Media.ALBUM
                 };
         String sortOrder = MediaStore.Audio.Media.ALBUM + " ASC";
         Cursor musicCursor = musicResolver.query(musicUri, mProjection, null, null, sortOrder);
-        ArrayList<String> albumArray = new ArrayList<>();
-        if (musicCursor != null && musicCursor.moveToFirst()) {
-            //get columns
-            int albumColumn = musicCursor.getColumnIndex
-                    (MediaStore.Audio.Media.ALBUM);
-            //add songs to list
-            do {
-                String album = musicCursor.getString(albumColumn);
-                albumArray.add(album);
+        if (musicCursor != null) {
+            if (albums == null) {
+                albums = new ArrayList<>();
             }
-            while (musicCursor.moveToNext());
+            if (musicCursor.getCount() > albums.size()) {
+                if (musicCursor.moveToFirst()) {
+                    //get columns
+                    int albumColumn = musicCursor.getColumnIndex
+                            (MediaStore.Audio.Media.ALBUM);
+                    //add songs to list
+                    do {
+                        String album = musicCursor.getString(albumColumn);
+                        albums.add(album);
+                    }
+                    while (musicCursor.moveToNext());
+                }
+            }
+            musicCursor.close();
         }
-        return albumArray;
-    }
-
-    public String getAlbumArtPath(String albumId) {
-        Cursor cursor = musicResolver.query(MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI,
-                new String[]{MediaStore.Audio.Albums._ID, MediaStore.Audio.Albums.ALBUM_ART},
-                MediaStore.Audio.Albums._ID + "=?",
-                new String[]{String.valueOf(albumId)},
-                null);
-
-        if (cursor.moveToFirst()) {
-            return cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Albums.ALBUM_ART));
-        }
-        return null;
+        return albums;
     }
 }
